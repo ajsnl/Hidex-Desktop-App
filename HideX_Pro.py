@@ -1,9 +1,3 @@
-# ============================================================
-#  HideX Pro — Image Steganography Tool
-#  MCA Mini Project | Upgraded Version
-#  Dependencies: pip install stegano cryptography Pillow
-# ============================================================
-
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
@@ -13,9 +7,8 @@ import base64
 from stegano import lsb
 from cryptography.fernet import Fernet, InvalidToken
 
-# ─────────────────────────────────────────────
+
 #  Encryption Helpers
-# ─────────────────────────────────────────────
 
 def get_fernet_key(password: str) -> bytes:
     """Derive a 32-byte Fernet key from a password using SHA-256."""
@@ -35,9 +28,8 @@ def decrypt_message(token: str, password: str) -> str:
     return cipher.decrypt(token.encode()).decode()
 
 
-# ─────────────────────────────────────────────
+
 #  Colour & Font Tokens
-# ─────────────────────────────────────────────
 
 BG_DARK    = "#0d1117"
 BG_CARD    = "#161b22"
@@ -55,17 +47,15 @@ FONT_LABEL  = ("Segoe UI", 10)
 FONT_BTN    = ("Segoe UI", 10, "bold")
 FONT_MONO   = ("Consolas", 10)
 
-# ─────────────────────────────────────────────
+
 #  Global State
-# ─────────────────────────────────────────────
 
 filename         = None
 password_visible = False
 
 
-# ─────────────────────────────────────────────
+
 #  Core Logic
-# ─────────────────────────────────────────────
 
 def select_image():
     global filename
@@ -173,9 +163,8 @@ def reveal_message():
         status("Reveal operation failed.", "err")
 
 
-# ─────────────────────────────────────────────
+
 #  UI Helpers
-# ─────────────────────────────────────────────
 
 def show_reveal_popup(message: str):
     """Display the revealed message in a modal popup."""
@@ -260,9 +249,7 @@ def status(msg: str, level: str = "ok"):
     status_lbl.configure(text=msg, fg=colours.get(level, TEXT_SEC))
 
 
-# ─────────────────────────────────────────────
 #  Build UI
-# ─────────────────────────────────────────────
 
 root = tk.Tk()
 root.title("HideX Pro - Image Steganography")
