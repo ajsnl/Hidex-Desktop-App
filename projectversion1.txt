@@ -1,0 +1,128 @@
+from tkinter import *
+from tkinter import filedialog, messagebox
+from PIL import Image, ImageTk
+import os
+from stegano import lsb  # Ensure stegano is installed using 'pip install stegano'
+import hashlib
+
+# Initialize Tkinter window
+root = Tk()
+root.title("HideX - Hide a Secret Text Message in an Image")
+root.geometry("1000x800")  
+root.resizable(True, True)
+root.configure(bg="#2f4155")
+
+def showimage():
+    global filename
+    try:
+        filename = filedialog.askopenfilename(initialdir=os.getcwd(), title='Select Image file', filetypes=(("PNG file", "*.png"), ("JPG file", "*.jpg")))
+        if filename:
+            img = Image.open(filename)
+            img.thumbnail((400, 400))  
+            img = ImageTk.PhotoImage(img)
+            lbl.configure(image=img)
+            lbl.image = img
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to open image: {e}")
+       
+
+def Hide():
+    global secret
+    if 'filename' not in globals() or not filename:
+        messagebox.showwarning("Warning", "No image selected! Please select an image first.")
+        return
+    message = text1.get(1.0, END).strip()
+    password = password_entry.get().strip()
+    
+    
+
+    if not message:
+        messagebox.showwarning("Warning", "Message is empty! Please enter a message.")
+        return
+    if not password:
+        messagebox.showwarning("Warning", "Password is empty! Please enter a password.")
+        return
+    
+    # Hash the password
+    hashed_password = hashlib.sha256(password.encode()).hexdigest()
+    secret_message = f"{hashed_password}:{message}"
+    
+    try:
+        secret = lsb.hide(filename, secret_message)
+        messagebox.showinfo("Success", "Message hidden successfully!")
+        save_image(secret)
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to hide message: {e}")
+
+def save_image(secret):
+    if 'filename' not in globals() or not filename:
+        messagebox.showwarning("Warning", "No image selected! Please select an image first.")
+        return
+    try:
+        save_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png"), ("JPEG files", "*.jpg")])
+        if save_path:
+            secret.save(save_path)
+            messagebox.showinfo("Success", "Image saved successfully!")
+            reset_interface()  # Reset the interface after saving
+    except Exception as e:
+        messagebox.showerror("Error", f"Error saving image: {e}")
+
+def show_revealed_message(message):
+    message_window = Toplevel(root)
+    message_window.title("Revealed Message")
+    message_window.geometry("500x300")  # Enlarged message window
+    message_window.configure(bg="#2f4155")
+    
+    Label(message_window, text=message, bg="#2f4155", fg="white", wraplength=450, font=("Arial", 14)).pack(pady=20)
+    Button(message_window, text="OK", command=lambda: [message_window.destroy(), reset_interface()], bg="white", fg="black", font=("Arial", 12)).pack(pady=10)
+
+def Show():
+    Clear_message = lsb.reveal(filename)
+    if Clear_message:
+        try:
+            hashed_password, message = Clear_message.split(":", 1)
+            input_password = password_entry.get()
+            input_hashed_password = hashlib.sha256(input_password.encode()).hexdigest()
+
+            if input_hashed_password == hashed_password:
+                show_revealed_message(message)
+                text1.delete(1.0, END)
+                text1.insert(END, message)
+                root.after(5000, reset_interface)
+            else:
+                messagebox.showerror("Error", "Incorrect password!")
+                text1.delete(1.0, END)
+                text1.insert(END, "Incorrect password!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to reveal message: {e}")
+    else:
+        messagebox.showwarning("Warning", "No hidden message found.")
+
+def reset_interface():
+    text1.delete(1.0, END)
+    password_entry.delete(0, END)
+    lbl.configure(image='')
+    lbl.image = None
+
+# UI Elements
+Label(root, text="CYBER SCIENCE", bg="#2d4155", fg="white", font=("Arial", 24)).pack(pady=20)
+
+frame1 = Frame(root, bg="#2f4155")
+frame1.pack(pady =10)
+
+Button(frame1, text="Select Image", command=showimage, width=20, height=2, font=("Arial", 14), bg="white", fg="black").grid(row=0, column=0, padx=10)
+Button(frame1, text="Hide Message", command=Hide, width=20, height=2, font=("Arial", 14), bg="white", fg="black").grid(row=0, column=1, padx=10)
+Button(frame1, text="Show Message", command=Show, width=20, height=2, font=("Arial", 14), bg="white", fg="black").grid(row=0, column=2, padx=10)
+
+lbl = Label(root, bg="#2f4155")
+lbl.pack(pady=10)
+
+text1 = Text(root, height=10, width=60, font=("Arial", 14), bg="white", fg="black")
+text1.pack(pady=10)
+
+password_entry = Entry(root, width=60, font=("Arial", 14), show='*', bg="white", fg="black")
+password_entry.pack(pady=10)
+
+Label(root, text="Enter Password", bg="#2f4155", fg="white", font=("Arial", 14)).pack(pady=10)
+
+root.mainloop()
